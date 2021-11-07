@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  mongodb:
+    image: mongo                  # image from Docker Hub
+    container_name: mongodb       # name displayed on the list of containers
+    restart: unless-stopped       # when to restart container (Ref: https://docs.docker.com/config/containers/start-containers-automatically/#use-a-restart-policy)
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      PUID: 1000                 # set user permission to sam as on HOST machine instead of default 'root'
+      PGID: 1000
+    volumes:
+      - ./data:/data/db:/data/db # map local folder to docker folder
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongodb-web-service
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/
+    depends_on:             # wait for containers to be started (NOT ready)
+      - mongodb
