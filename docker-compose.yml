@@ -1,16 +1,35 @@
 version: "3.8"
 services:
-  mongodb:
-    image: mongo                  # image from Docker Hub
-    container_name: mongodb       # name displayed on the list of containers
+  backend:
+    image: node:lts-alpine        # image from Docker Hub
+    container_name: backend       # name displayed on the list of containers
     restart: unless-stopped       # when to restart container (Ref: https://docs.docker.com/config/containers/start-containers-automatically/#use-a-restart-policy)
+    working_dir: /app             # where to execute 'command'
+    depends_on:
+      - mongodb
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3000
+      PUID: 1000                  # set user permission to sam as on HOST machine instead of default 'root'
+      PGID: 1000
+    volumes:
+      - ./packages/backend:/app    # map local folder to docker folder
+    ports:
+      - 3000:3000                 # map ports between local and docker container
+    command:
+      sh -c "npm i && npm run serve"
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      PUID: 1000                 # set user permission to sam as on HOST machine instead of default 'root'
+      PUID: 1000
       PGID: 1000
     volumes:
-      - ./data:/data/db:/data/db # map local folder to docker folder
+      - ./data/db:/data/db
     ports:
       - 27017:27017
 
